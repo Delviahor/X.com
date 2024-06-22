@@ -1,0 +1,55 @@
+/* styles.css */
+
+/* Reset de estilos y configuración general */
+body {
+  background-color: #000;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 600px;
+  margin: 100px auto;
+}
+
+h1 {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+}
+
+.welcome-message {
+  font-size: 1.5rem;
+  margin-bottom: 30px;
+}
+
+.buttons {
+  margin-top: 30px;
+}
+
+.button {
+  display: inline-block;
+  padding: 15px 30px;
+  margin: 10px;
+  font-size: 1.2rem;
+  text-decoration: none;
+  color: #fff;
+  background-color: #6f42c1; /* Morado */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: #5a3d8a; /* Morado más oscuro al pasar el mouse */
+}
+
+.purple {
+  background-color: #6f42c1; /* Morado */
+}
+
+.purple:hover {
+  background-color: #5a3d8a; /* Morado más oscuro al pasar el mouse */
+}

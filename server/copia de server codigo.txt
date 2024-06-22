@@ -1,0 +1,60 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+
+const app = express();
+const port = 3000;
+
+// Configurar body-parser para manejar solicitudes POST
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Servir archivos estáticos desde la carpeta 'public'
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Obtener la ruta absoluta de la base de datos dentro de la carpeta 'server'
+const dbPath = path.resolve(__dirname, 'server', 'database.db');
+
+// Conectar a la base de datos SQLite
+let db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Error al conectar a la base de datos:', err.message);
+    } else {
+        console.log('Conectado a la base de datos SQLite en', dbPath);
+    }
+});
+
+// Ruta para la página de inicio
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Ruta para la página de inicio de sesión
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Ruta para la página de registro
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
+// Manejar el envío del formulario de registro
+app.post('/register', (req, res) => {
+    const { 'first-name': firstName, 'second-name': secondName, 'first-surname': firstSurname, 'second-surname': secondSurname, email, username, password } = req.body;
+
+    const query = `INSERT INTO usuarios (primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, correo, nombre_usuario, contrasena) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+    db.run(query, [firstName, secondName, firstSurname, secondSurname, email, username, password], function(err) {
+        if (err) {
+            return console.error('Error al insertar datos en la tabla de usuarios:', err.message);
+        }
+        console.log('Nuevo usuario registrado con ID:', this.lastID);
+        res.send('Registro exitoso');
+    });
+});
+
+// Iniciar el servidor
+app.listen(port, () => {
+    console.log(`Servidor iniciado en http://localhost:${port}`);
+});

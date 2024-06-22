@@ -1,0 +1,192 @@
+En 0.01V se encuentra solo los archivos front end y los backend sin conectar.
+
+Estructura del proyecto:
+
+X.com/
+├── server/
+│   ├── node_modules/
+│   ├── package-lock.json
+│   ├── package.json
+│   └── server.js
+├── public/
+│   ├── index.html
+│   ├── login.html
+│   ├── register.html
+│   ├── styles.css
+│   └── script.js
+
+Descripción de Archivos y Carpetas
+server/: Carpeta que contiene el código del servidor backend.
+
+node_modules/: Carpeta generada por npm que contiene todas las dependencias del proyecto.
+package-lock.json: Archivo que asegura que las instalaciones de dependencias sean reproducibles.
+package.json: Archivo de configuración del proyecto que incluye metadatos, scripts y dependencias del proyecto.
+server.js: Archivo principal del servidor Node.js que configura el servidor Express, maneja las rutas y sirve los archivos estáticos.
+public/: Carpeta que contiene los archivos frontend (HTML, CSS, JavaScript).
+
+index.html: Página de inicio de la aplicación web que muestra un fondo negro, el texto "X.com", un mensaje de bienvenida y botones para "Inicio de sesión" y "Registro".
+login.html: Página de inicio de sesión con un formulario para que los usuarios ingresen su nombre de usuario y contraseña.
+register.html: Página de registro con un formulario para que los usuarios ingresen su nombre, apellido y otras informaciones con opciones para indicar que no tienen ciertos nombres.
+styles.css: Archivo de estilos CSS que define la apariencia visual de las páginas HTML.
+script.js: Archivo JavaScript que maneja la lógica de los formularios de inicio de sesión y registro, así como las interacciones del usuario.
+
+Contenidos de Archivos Principales
+server/server.js
+Configura el servidor Express para servir los archivos estáticos y manejar las rutas.
+
+javascript:
+const express = require('express');
+const path = require('path');
+const app = express();
+const port = 3000;
+
+// Middleware para servir archivos estáticos desde la carpeta "public"
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Ruta para servir el archivo index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Ruta para servir el archivo login.html
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Ruta para servir el archivo register.html
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
+// Iniciar el servidor
+app.listen(port, () => {
+  console.log(`Servidor iniciado en http://localhost:${port}`);
+});
+
+
+public/index.html
+Página de inicio con botones para "Inicio de sesión" y "Registro".
+
+html:
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X.com</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>X.com</h1>
+        <p class="welcome-message">Bienvenido, Cosmonauta</p>
+        <div class="buttons">
+            <a href="login.html" class="button purple">Inicio de sesión</a>
+            <br>
+            <a href="register.html" class="button purple">Registro</a>
+        </div>
+    </div>
+</body>
+</html>
+
+
+public/styles.css
+Archivo CSS que define los estilos de las páginas.
+
+body {
+    background-color: #000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 600px;
+    margin: 100px auto;
+}
+
+h1 {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+}
+
+.welcome-message {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+}
+
+.buttons {
+    margin-top: 30px;
+}
+
+.button {
+    display: inline-block;
+    padding: 15px 30px;
+    margin: 10px;
+    font-size: 1.2rem;
+    text-decoration: none;
+    color: #fff;
+    background-color: #6f42c1;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #5a3d8a;
+}
+
+.purple {
+    background-color: #6f42c1;
+}
+
+.purple:hover {
+    background-color: #5a3d8a;
+}
+
+
+public/script.js
+Archivo JavaScript que maneja la lógica de los formularios.
+
+document.getElementById('login-form')?.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+  
+    if(username === "admin" && password === "password") {
+      alert("Login successful!");
+    } else {
+      alert("Invalid username or password.");
+    }
+});
+  
+document.getElementById('register-button')?.addEventListener('click', function() {
+    window.location.href = 'register.html';
+});
+  
+document.getElementById('register-form')?.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const firstName = document.getElementById('first-name').value;
+    const secondName = document.getElementById('second-name').value;
+    const firstSurname = document.getElementById('first-surname').value;
+    const secondSurname = document.getElementById('second-surname').value;
+  
+    alert('Registration successful!');
+});
+  
+document.getElementById('no-second-name')?.addEventListener('change', function(event) {
+    document.getElementById('second-name').disabled = event.target.checked;
+});
+  
+document.getElementById('no-second-surname')?.addEventListener('change', function(event) {
+    document.getElementById('second-surname').disabled = event.target.checked;
+});
+
+
+Consideraciones Finales:
+
+Servidor Node.js: El servidor Express (server.js) se encarga de servir los archivos estáticos y manejar las rutas para las páginas de inicio, inicio de sesión y registro.
+Archivos Frontend: Los archivos HTML (index.html, login.html, register.html) definen la estructura de las páginas. El archivo CSS (styles.css) define la apariencia visual y el archivo JavaScript (script.js) maneja la lógica de los formularios y las interacciones del usuario.
+Con esta configuración, tu proyecto X.com está estructurado y configurado para servir una aplicación web con una página de inicio, inicio de sesión y registro, con la lógica necesaria para manejar las interacciones del usuario.
