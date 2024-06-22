@@ -18,6 +18,20 @@ document.getElementById('register-button')?.addEventListener('click', function()
 // Manejar el evento de envío del formulario de registro
 document.getElementById('register-form')?.addEventListener('submit', function(event) {
   event.preventDefault();
+
+  // Validación de campos de nombres y apellidos
+  const firstName = document.getElementById('first-name').value;
+  const secondName = document.getElementById('second-name').value;
+  const firstSurname = document.getElementById('first-surname').value;
+  const secondSurname = document.getElementById('second-surname').value;
+
+  const regexUppercase = /[A-Z]/;
+
+  if (regexUppercase.test(firstName) || regexUppercase.test(secondName) || regexUppercase.test(firstSurname) || regexUppercase.test(secondSurname)) {
+    alert('Los campos de nombres y apellidos deben estar en minúsculas.');
+    return;
+  }
+
   const formData = new FormData(this);
   fetch('/register', {
       method: 'POST',
