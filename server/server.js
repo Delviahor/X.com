@@ -51,6 +51,27 @@ app.post('/register', (req, res) => {
     });
 });
 
+// Manejar el envío del formulario de inicio de sesión
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    console.log('Intentando iniciar sesión con:', username, password);
+    const query = `SELECT * FROM usuarios WHERE nombre_usuario = ? AND contrasena = ?`;
+
+    db.get(query, [username, password], (err, row) => {
+        if (err) {
+            console.error('Error al consultar la base de datos:', err.message);
+            res.status(500).send('Error en el servidor');
+        } else if (row) {
+            console.log('Usuario encontrado:', row);
+            res.send('Inicio de sesión exitoso');
+        } else {
+            console.log('Nombre de usuario o contraseña incorrectos');
+            res.status(401).send('Nombre de usuario o contraseña incorrectos');
+        }
+    });
+});
+
+
 // Iniciar el servidor
 app.listen(port, () => {
     console.log(`Servidor iniciado en http://localhost:${port}`);
