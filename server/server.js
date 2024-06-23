@@ -36,6 +36,12 @@ app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'register.html'));
 });
 
+// Ruta para la página principal después del inicio de sesión
+app.get('/home', (req, res) => {
+    const { username } = req.query;
+    res.send(`<h2>Bienvenido, ${username}!</h2>`); // Puedes renderizar aquí tu página principal con un mensaje de bienvenida
+});
+
 // Manejar el envío del formulario de registro
 app.post('/register', (req, res) => {
     const { 'first-name': firstName, 'second-name': secondName, 'first-surname': firstSurname, 'second-surname': secondSurname, email, username, password } = req.body;
@@ -63,6 +69,8 @@ app.post('/login', (req, res) => {
             res.status(500).send('Error en el servidor');
         } else if (row) {
             console.log('Usuario encontrado:', row);
+            // Redirigir al usuario a la página principal de bienvenida si las credenciales son correctas
+            //res.redirect('/home');
             res.send('Inicio de sesión exitoso');
         } else {
             console.log('Nombre de usuario o contraseña incorrectos');
@@ -70,7 +78,6 @@ app.post('/login', (req, res) => {
         }
     });
 });
-
 
 // Iniciar el servidor
 app.listen(port, () => {

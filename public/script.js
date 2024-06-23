@@ -23,9 +23,9 @@ document.getElementById('login-form')?.addEventListener('submit', function(event
     if (data === 'Inicio de sesión exitoso') {
       alert("Login successful!");
       // Redireccionar o realizar otra acción después del inicio de sesión exitoso
-      window.location.href = '/'; // Redirigir a la página principal
+      window.location.href = `/home?username=${encodeURIComponent(username)}`; // Redirigir a la página principal con el nombre de usuario
     } else {
-      throw new Error('Credenciales incorrectas');
+        throw new Error('Credenciales incorrectas');
     }
   })
   .catch(error => {
@@ -37,12 +37,13 @@ document.getElementById('login-form')?.addEventListener('submit', function(event
     } else {
       // Mostrar mensaje de error de servidor en la página HTML
       const errorMessage = document.createElement('p');
-      errorMessage.textContent = "Nombre de usuario o contraseña incorrectos.";
+      errorMessage.textContent = "Nombre de usuario o contraseña incorrectos. (2)";
       document.body.appendChild(errorMessage);
       console.error('Error:', error);
     }
   });
 });
+
 
 // Manejar el evento de clic del botón de registro
 document.getElementById('register-button')?.addEventListener('click', function() {
@@ -87,4 +88,20 @@ document.getElementById('no-second-name')?.addEventListener('change', function(e
 // Segundo apellido
 document.getElementById('no-second-surname')?.addEventListener('change', function(event) {
   document.getElementById('second-surname').disabled = event.target.checked;
+});
+
+// Esperar a que el documento esté completamente cargado
+document.addEventListener('DOMContentLoaded', function() {
+  // Obtener parámetros de la URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('username');
+
+  // Verificar si se encontró el nombre de usuario en los parámetros de la URL
+  if (username) {
+      // Insertar el nombre de usuario en el elemento con id 'username-placeholder'
+      const usernamePlaceholder = document.getElementById('username-placeholder');
+      if (usernamePlaceholder) {
+          usernamePlaceholder.textContent = username;
+      }
+  }
 });
