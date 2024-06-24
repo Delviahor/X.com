@@ -39,26 +39,17 @@ app.get('/register', (req, res) => {
 // Ruta para la página principal después del inicio de sesión
 app.get('/home', (req, res) => {
     const { username } = req.query;
-    //res.send(`<h2>Bienvenido, ${username}!</h2>`); // Puedes renderizar aquí tu página principal con un mensaje de bienvenida
-    res.sendFile(path.join(__dirname, '..', 'public', 'home.html'));
-});
-
-// Ruta para obtener el saldo del usuario
-app.get('/saldo', (req, res) => {
-    const { username } = req.query;
-
-    // Consultar la base de datos para obtener el saldo del usuario
     const query = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
-
     db.get(query, [username], (err, row) => {
         if (err) {
             console.error('Error al consultar la base de datos:', err.message);
-            res.status(500).json({ error: 'Error en el servidor' });
-        } else if (row) {
-            // Enviar el saldo como respuesta en formato JSON
-            res.json({ saldo: row.saldo });
+            res.status(500).send('Error en el servidor');
         } else {
-            res.status(404).json({ error: 'Usuario no encontrado' });
+            res.send(`
+                <h2>Bienvenido, ${username}!</h2>
+                <p>¡Has iniciado sesión correctamente!</p>
+                <p>Tu saldo actual es: ${row.saldo}</p>
+            `);
         }
     });
 });
@@ -67,7 +58,7 @@ app.get('/saldo', (req, res) => {
 app.post('/register', (req, res) => {
     const { 'first-name': firstName, 'second-name': secondName, 'first-surname': firstSurname, 'second-surname': secondSurname, email, username, password } = req.body;
 
-    const query = `INSERT INTO usuarios (primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, correo, nombre_usuario, contrasena) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO usuarios (primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, correo, nombre_usuario, contrasena, saldo) VALUES (?, ?, ?, ?, ?, ?, ?, 1000.0)`;
 
     db.run(query, [firstName, secondName, firstSurname, secondSurname, email, username, password], function(err) {
         if (err) {
@@ -90,9 +81,7 @@ app.post('/login', (req, res) => {
             res.status(500).send('Error en el servidor');
         } else if (row) {
             console.log('Usuario encontrado:', row);
-            // Redirigir al usuario a la página principal de bienvenida si las credenciales son correctas
-            //res.send('Inicio de sesión exitoso');
-            res.send(row)
+            res.send(JSON.stringify({ message: 'Inicio de sesión exitoso', saldo: row.saldo }));
         } else {
             console.log('Nombre de usuario o contraseña incorrectos');
             res.status(401).send('Nombre de usuario o contraseña incorrectos');
