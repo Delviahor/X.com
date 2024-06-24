@@ -39,7 +39,28 @@ app.get('/register', (req, res) => {
 // Ruta para la página principal después del inicio de sesión
 app.get('/home', (req, res) => {
     const { username } = req.query;
-    res.send(`<h2>Bienvenido, ${username}!</h2>`); // Puedes renderizar aquí tu página principal con un mensaje de bienvenida
+    //res.send(`<h2>Bienvenido, ${username}!</h2>`); // Puedes renderizar aquí tu página principal con un mensaje de bienvenida
+    res.sendFile(path.join(__dirname, '..', 'public', 'home.html'));
+});
+
+// Ruta para obtener el saldo del usuario
+app.get('/saldo', (req, res) => {
+    const { username } = req.query;
+
+    // Consultar la base de datos para obtener el saldo del usuario
+    const query = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
+
+    db.get(query, [username], (err, row) => {
+        if (err) {
+            console.error('Error al consultar la base de datos:', err.message);
+            res.status(500).json({ error: 'Error en el servidor' });
+        } else if (row) {
+            // Enviar el saldo como respuesta en formato JSON
+            res.json({ saldo: row.saldo });
+        } else {
+            res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+    });
 });
 
 // Manejar el envío del formulario de registro
@@ -70,8 +91,8 @@ app.post('/login', (req, res) => {
         } else if (row) {
             console.log('Usuario encontrado:', row);
             // Redirigir al usuario a la página principal de bienvenida si las credenciales son correctas
-            //res.redirect('/home');
-            res.send('Inicio de sesión exitoso');
+            //res.send('Inicio de sesión exitoso');
+            res.send(row)
         } else {
             console.log('Nombre de usuario o contraseña incorrectos');
             res.status(401).send('Nombre de usuario o contraseña incorrectos');

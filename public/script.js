@@ -16,7 +16,7 @@ document.getElementById('login-form')?.addEventListener('submit', function(event
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    return response.text();
+    return response.json(); // Esperamos recibir un objeto JSON con la respuesta del servidor
   })
   .then(data => {
     // Verificar la respuesta del servidor
@@ -98,10 +98,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Verificar si se encontró el nombre de usuario en los parámetros de la URL
   if (username) {
-      // Insertar el nombre de usuario en el elemento con id 'username-placeholder'
-      const usernamePlaceholder = document.getElementById('username-placeholder');
-      if (usernamePlaceholder) {
-          usernamePlaceholder.textContent = username;
-      }
-  }
+    // Insertar el nombre de usuario en el elemento con id 'username-placeholder'
+    const usernamePlaceholder = document.getElementById('username-placeholder');
+    if (usernamePlaceholder) {
+        usernamePlaceholder.textContent = username;
+    }
+
+    // Obtener saldo del usuario utilizando fetch
+    fetch(`/saldo?username=${encodeURIComponent(username)}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json(); // Esperamos recibir un objeto JSON con el saldo
+      })
+      .then(data => {
+        // Mostrar el saldo en la página
+        const saldoElement = document.getElementById('saldo');
+        if (saldoElement) {
+          saldoElement.textContent = `Saldo actual: $${data.saldo}`;
+        }
+      })
+      .catch(error => {
+        console.error('Error al obtener saldo:', error);
+        // Mostrar mensaje de error en la página
+        const errorMessage = document.createElement('p');
+        errorMessage.textContent = "Error al obtener saldo del usuario. Por favor, inténtalo de nuevo más tarde.";
+        document.body.appendChild(errorMessage);
+      });
+}
 });
