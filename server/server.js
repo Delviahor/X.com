@@ -1,3 +1,5 @@
+// server.js
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
@@ -31,98 +33,114 @@ app.get('/register', (req, res) => {
 });
 
 app.get('/home', (req, res) => {
+    const { username } = req.query;
     res.sendFile(path.join(__dirname, '..', 'public', 'home.html'));
 });
 
-app.get('/saldo', (req, res) => {
-    const { username } = req.query;
-    const query = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
-    db.get(query, [username], (err, row) => {
-        if (err) {
-            console.error('Error al consultar la base de datos:', err.message);
-            res.status(500).send({ error: 'Error en el servidor' });
-        } else if (row) {
-            res.send({ saldo: row.saldo });
-        } else {
-            res.status(404).send({ error: 'Usuario no encontrado' });
-        }
-    });
-});
-
 app.post('/register', (req, res) => {
-    const { 'first-name': firstName, 'second-name': secondName, 'first-surname': firstSurname, 'second-surname': secondSurname, email, username, password } = req.body;
+    const { firstName, secondName, firstSurname, secondSurname, username, password } = req.body;
+    const insertUserQuery = `INSERT INTO usuarios (primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, nombre_usuario, contrasena, saldo) VALUES (?, ?, ?, ?, ?, ?, 0)`;
 
-    const query = `INSERT INTO usuarios (primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, correo, nombre_usuario, contrasena, saldo) VALUES (?, ?, ?, ?, ?, ?, ?, 0)`;
-
-    db.run(query, [firstName, secondName, firstSurname, secondSurname, email, username, password], function(err) {
+    db.run(insertUserQuery, [firstName, secondName, firstSurname, secondSurname, username, password], function(err) {
         if (err) {
-            return console.error('Error al insertar datos en la tabla de usuarios:', err.message);
+            console.error(err.message);
+            res.status(500).send("Error al registrar el usuario.");
+        } else {
+            res.send("¡Registro exitoso!");
         }
-        console.log('Nuevo usuario registrado con ID:', this.lastID);
-        res.send('Registro exitoso');
     });
 });
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    const query = `SELECT * FROM usuarios WHERE nombre_usuario = ? AND contrasena = ?`;
+    const loginQuery = `SELECT * FROM usuarios WHERE nombre_usuario = ? AND contrasena = ?`;
 
-    db.get(query, [username, password], (err, row) => {
+    db.get(loginQuery, [username, password], (err, row) => {
         if (err) {
-            console.error('Error al consultar la base de datos:', err.message);
-            res.status(500).send('Error en el servidor');
+            console.error(err.message);
+            res.status(500).send("Error en el servidor.");
         } else if (row) {
-            res.send('Inicio de sesión exitoso');
+            res.send("Inicio de sesión exitoso");
         } else {
-            res.status(401).send('Nombre de usuario o contraseña incorrectos');
+            res.status(401).send("Credenciales incorrectas");
+        }
+    });
+});
+
+app.get('/saldo', (req, res) => {
+    const { username } = req.query;
+    const getSaldoQuery = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
+
+    db.get(getSaldoQuery, [username], (err, row) => {
+        if (err) {
+            console.error(err.message);
+            res.status(500).send("Error al obtener el saldo.");
+        } else if (row) {
+            res.json({ saldo: row.saldo });
+        } else {
+            res.status(404).send("Usuario no encontrado.");
         }
     });
 });
 
 app.post('/transfer', (req, res) => {
     const { username, destUsername, amount } = req.body;
-    const amountNumber = parseFloat(amount);
-
-    if (amountNumber <= 0) {
-        res.send({ success: false, message: 'El monto debe ser mayor a cero' });
-        return;
-    }
+    const amountFloat = parseFloat(amount);
 
     db.serialize(() => {
-        db.get(`SELECT saldo FROM usuarios WHERE nombre_usuario = ?`, [username], (err, row) => {
-            if (err) {
-                console.error('Error al consultar la base de datos:', err.message);
-                res.status(500).send({ success: false, message: 'Error en el servidor' });
-                return;
+        db.run("BEGIN TRANSACTION");
+
+        const getSenderSaldoQuery = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
+        db.get(getSenderSaldoQuery, [username], (err, sender) => {
+            if (err || !sender) {
+                console.error(err ? err.message : "Usuario no encontrado.");
+                db.run("ROLLBACK");
+                return res.status(500).json({ success: false, message: "Error al obtener el saldo del remitente." });
+            } else if (sender.saldo < amountFloat) {
+                db.run("ROLLBACK");
+                return res.status(400).json({ success: false, message: "Saldo insuficiente." });
             }
 
-            if (!row || row.saldo < amountNumber) {
-                res.send({ success: false, message: 'Saldo insuficiente' });
-                return;
-            }
-
-            db.run(`UPDATE usuarios SET saldo = saldo - ? WHERE nombre_usuario = ?`, [amountNumber, username], (err) => {
-                if (err) {
-                    console.error('Error al actualizar el saldo del remitente:', err.message);
-                    res.status(500).send({ success: false, message: 'Error en el servidor' });
-                    return;
+            const getReceiverSaldoQuery = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
+            db.get(getReceiverSaldoQuery, [destUsername], (err, receiver) => {
+                if (err || !receiver) {
+                    console.error(err ? err.message : "Usuario destino no encontrado.");
+                    db.run("ROLLBACK");
+                    return res.status(500).json({ success: false, message: "Error al obtener el saldo del destinatario." });
                 }
 
-                db.run(`UPDATE usuarios SET saldo = saldo + ? WHERE nombre_usuario = ?`, [amountNumber, destUsername], (err) => {
+                const updateSenderSaldoQuery = `UPDATE usuarios SET saldo = saldo - ? WHERE nombre_usuario = ?`;
+                db.run(updateSenderSaldoQuery, [amountFloat, username], function(err) {
                     if (err) {
-                        console.error('Error al actualizar el saldo del destinatario:', err.message);
-                        res.status(500).send({ success: false, message: 'Error en el servidor' });
-                        return;
+                        console.error(err.message);
+                        db.run("ROLLBACK");
+                        return res.status(500).json({ success: false, message: "Error al actualizar el saldo del remitente." });
                     }
 
-                    db.get(`SELECT saldo FROM usuarios WHERE nombre_usuario = ?`, [username], (err, row) => {
+                    const updateReceiverSaldoQuery = `UPDATE usuarios SET saldo = saldo + ? WHERE nombre_usuario = ?`;
+                    db.run(updateReceiverSaldoQuery, [amountFloat, destUsername], function(err) {
                         if (err) {
-                            console.error('Error al consultar el saldo actualizado:', err.message);
-                            res.status(500).send({ success: false, message: 'Error en el servidor' });
-                            return;
+                            console.error(err.message);
+                            db.run("ROLLBACK");
+                            return res.status(500).json({ success: false, message: "Error al actualizar el saldo del destinatario." });
                         }
 
-                        res.send({ success: true, newSaldo: row.saldo });
+                        db.run("COMMIT", (err) => {
+                            if (err) {
+                                console.error(err.message);
+                                return res.status(500).json({ success: false, message: "Error al finalizar la transacción." });
+                            }
+
+                            const getNewSenderSaldoQuery = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
+                            db.get(getNewSenderSaldoQuery, [username], (err, sender) => {
+                                if (err || !sender) {
+                                    console.error(err ? err.message : "Usuario no encontrado.");
+                                    return res.status(500).json({ success: false, message: "Error al obtener el nuevo saldo del remitente." });
+                                }
+
+                                res.json({ success: true, newSaldo: sender.saldo });
+                            });
+                        });
                     });
                 });
             });

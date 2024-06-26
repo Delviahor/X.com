@@ -1,4 +1,5 @@
-// Manejar el evento de envío del formulario de inicio de sesión
+// script.js
+
 document.getElementById('login-form')?.addEventListener('submit', function(event) {
   event.preventDefault();
   const username = document.getElementById('username').value;
@@ -19,23 +20,21 @@ document.getElementById('login-form')?.addEventListener('submit', function(event
   })
   .then(data => {
     if (data === 'Inicio de sesión exitoso') {
-      alert("Login successful!");
+      alert("¡Inicio de sesión exitoso!");
       window.location.href = `/home?username=${encodeURIComponent(username)}`;
     } else {
         throw new Error('Credenciales incorrectas');
     }
   })
   .catch(error => {
+    const errorMessage = document.createElement('p');
     if (error.message === 'Credenciales incorrectas') {
-      const errorMessage = document.createElement('p');
       errorMessage.textContent = "Nombre de usuario o contraseña incorrectos.";
-      document.body.appendChild(errorMessage);
     } else {
-      const errorMessage = document.createElement('p');
-      errorMessage.textContent = "Nombre de usuario o contraseña incorrectos. (2)";
-      document.body.appendChild(errorMessage);
-      console.error('Error:', error);
+      errorMessage.textContent = "Error en el servidor.";
     }
+    document.body.appendChild(errorMessage);
+    console.error('Error:', error);
   });
 });
 
@@ -88,37 +87,42 @@ document.addEventListener('DOMContentLoaded', function() {
           usernamePlaceholder.textContent = username;
       }
 
-      fetch(`/get-saldo?username=${encodeURIComponent(username)}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('saldo-placeholder').textContent = data.saldo.toFixed(2);
-        })
-        .catch(error => console.error('Error:', error));
+      fetch(`/saldo?username=${encodeURIComponent(username)}`)
+      .then(response => response.json())
+      .then(data => {
+          const saldoPlaceholder = document.getElementById('saldo-placeholder');
+          if (saldoPlaceholder) {
+              saldoPlaceholder.textContent = data.saldo;
+          }
+      })
+      .catch(error => console.error('Error:', error));
   }
 });
 
 document.getElementById('transfer-form')?.addEventListener('submit', function(event) {
   event.preventDefault();
-  const usernameOrigen = new URLSearchParams(window.location.search).get('username');
-  const usernameDestino = document.getElementById('dest-username').value;
-  const monto = document.getElementById('amount').value;
+  const username = new URLSearchParams(window.location.search).get('username');
+  const destUsername = document.getElementById('dest-username').value;
+  const amount = document.getElementById('amount').value;
 
   fetch('/transfer', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
     },
-    body: `usernameOrigen=${encodeURIComponent(usernameOrigen)}&usernameDestino=${encodeURIComponent(usernameDestino)}&monto=${encodeURIComponent(monto)}`
+    body: JSON.stringify({ username, destUsername, amount })
   })
-  .then(response => response.text())
+  .then(response => response.json())
   .then(data => {
-    alert(data);
-    if (data === 'Transferencia exitosa') {
-      location.reload();
+    if (data.success) {
+      alert("¡Transferencia exitosa!");
+      const saldoPlaceholder = document.getElementById('saldo-placeholder');
+      if (saldoPlaceholder) {
+          saldoPlaceholder.textContent = data.newSaldo;
+      }
+    } else {
+      alert("Error en la transferencia: " + data.message);
     }
   })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Error al realizar la transferencia');
-  });
+  .catch(error => console.error('Error:', error));
 });
