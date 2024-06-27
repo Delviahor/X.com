@@ -87,6 +87,11 @@ app.post('/transfer', (req, res) => {
     const { username, destUsername, amount } = req.body;
     const amountFloat = parseFloat(amount);
 
+    // Validar que el monto sea un número válido y mayor que cero
+    if (isNaN(amountFloat) || amountFloat <= 0) {
+        return res.status(400).json({ success: false, message: "El monto de la transferencia debe ser un número positivo." });
+    }
+
     db.serialize(() => {
         db.run("BEGIN TRANSACTION");
 
