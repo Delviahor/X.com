@@ -87,6 +87,11 @@ app.post('/transfer', (req, res) => {
     const { username, destUsername, amount } = req.body;
     const amountFloat = parseFloat(amount);
 
+    // Validar que el remitente y el destinatario sean diferentes
+    if (username === destUsername) {
+        return res.status(400).json({ success: false, message: "No puedes transferirte dinero a ti mismo." });
+    }
+
     // Validar que el monto sea un número válido y mayor que cero
     if (isNaN(amountFloat) || amountFloat <= 0) {
         return res.status(400).json({ success: false, message: "El monto de la transferencia debe ser un número positivo." });
@@ -130,20 +135,30 @@ app.post('/transfer', (req, res) => {
                             return res.status(500).json({ success: false, message: "Error al actualizar el saldo del destinatario." });
                         }
 
-                        db.run("COMMIT", (err) => {
+                        // Registro de la transferencia en la tabla 'transferencias'
+                        const insertTransferQuery = `INSERT INTO transferencias (remitente_id, destinatario_id, monto, fecha) VALUES (?, ?, ?, DATE('now'))`;
+                        db.run(insertTransferQuery, [username, destUsername, amountFloat], function(err) {
                             if (err) {
                                 console.error(err.message);
-                                return res.status(500).json({ success: false, message: "Error al finalizar la transacción." });
+                                db.run("ROLLBACK");
+                                return res.status(500).json({ success: false, message: "Error al registrar la transferencia." });
                             }
 
-                            const getNewSenderSaldoQuery = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
-                            db.get(getNewSenderSaldoQuery, [username], (err, sender) => {
-                                if (err || !sender) {
-                                    console.error(err ? err.message : "Usuario no encontrado.");
-                                    return res.status(500).json({ success: false, message: "Error al obtener el nuevo saldo del remitente." });
+                            db.run("COMMIT", (err) => {
+                                if (err) {
+                                    console.error(err.message);
+                                    return res.status(500).json({ success: false, message: "Error al finalizar la transacción." });
                                 }
 
-                                res.json({ success: true, newSaldo: sender.saldo });
+                                const getNewSenderSaldoQuery = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
+                                db.get(getNewSenderSaldoQuery, [username], (err, sender) => {
+                                    if (err || !sender) {
+                                        console.error(err ? err.message : "Usuario no encontrado.");
+                                        return res.status(500).json({ success: false, message: "Error al obtener el nuevo saldo del remitente." });
+                                    }
+
+                                    res.json({ success: true, newSaldo: sender.saldo });
+                                });
                             });
                         });
                     });
