@@ -1,5 +1,3 @@
-// script.js
-
 document.getElementById('login-form')?.addEventListener('submit', function(event) {
   event.preventDefault();
   const username = document.getElementById('username').value;
@@ -97,6 +95,10 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .catch(error => console.error('Error:', error));
   }
+
+  document.getElementById('transfer-button')?.addEventListener('click', function() {
+      window.location.href = `/transfer.html?username=${encodeURIComponent(username)}`;
+  });
 });
 
 document.getElementById('transfer-form')?.addEventListener('submit', function(event) {
@@ -104,6 +106,11 @@ document.getElementById('transfer-form')?.addEventListener('submit', function(ev
   const username = new URLSearchParams(window.location.search).get('username');
   const destUsername = document.getElementById('dest-username').value;
   const amount = document.getElementById('amount').value;
+
+  if (!username) {
+    alert("Nombre de usuario no encontrado en la URL");
+    return;
+  }
 
   fetch('/transfer', {
     method: 'POST',
@@ -116,13 +123,16 @@ document.getElementById('transfer-form')?.addEventListener('submit', function(ev
   .then(data => {
     if (data.success) {
       alert("¡Transferencia exitosa!");
-      const saldoPlaceholder = document.getElementById('saldo-placeholder');
-      if (saldoPlaceholder) {
-          saldoPlaceholder.textContent = data.newSaldo;
-      }
+      window.location.href = `/home?username=${encodeURIComponent(username)}`;
     } else {
       alert("Error en la transferencia: " + data.message);
     }
   })
   .catch(error => console.error('Error:', error));
+});
+
+document.getElementById('back-button')?.addEventListener('click', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('username');
+  window.location.href = `/home?username=${encodeURIComponent(username)}`;
 });
