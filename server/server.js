@@ -42,10 +42,10 @@ app.get('/transfer', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
-    const { firstName, secondName, firstSurname, secondSurname, username, password } = req.body;
-    const insertUserQuery = `INSERT INTO usuarios (primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, nombre_usuario, contrasena, saldo) VALUES (?, ?, ?, ?, ?, ?, 0)`;
+    const { "first-name": firstName, "second-name": secondName, "first-surname": firstSurname, "second-surname": secondSurname, email, username, password } = req.body;
+    const insertUserQuery = `INSERT INTO usuarios (primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, correo, nombre_usuario, contrasena, saldo) VALUES (?, ?, ?, ?, ?, ?, ?, 1000)`;
 
-    db.run(insertUserQuery, [firstName, secondName, firstSurname, secondSurname, username, password], function(err) {
+    db.run(insertUserQuery, [firstName, secondName, firstSurname, secondSurname, email, username, password], function(err) {
         if (err) {
             console.error(err.message);
             res.status(500).send("Error al registrar el usuario.");
@@ -54,6 +54,7 @@ app.post('/register', (req, res) => {
         }
     });
 });
+
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
