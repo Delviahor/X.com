@@ -14,6 +14,15 @@
     <h3>Transferir Dinero</h3>
     <button id="transfer-button">Ir a Transferencias</button>
 
+    <h3>Crear Nuevo Apartado</h3>
+    <form id="crear-apartado-form">
+        <label for="nombre-apartado">Nombre del Apartado:</label>
+        <input type="text" id="nombre-apartado" name="nombre" required>
+        <label for="monto-apartado">Monto del Apartado:</label>
+        <input type="number" id="monto-apartado" name="monto" step="0.01" required>
+        <button type="submit">Crear Apartado</button>
+    </form>
+
     <script src="script.js"></script>
 </body>
 </html>

@@ -136,3 +136,40 @@ document.getElementById('back-button')?.addEventListener('click', function() {
   const username = urlParams.get('username');
   window.location.href = `/home?username=${encodeURIComponent(username)}`;
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+  const username = new URLSearchParams(window.location.search).get('username');
+  document.getElementById('username-placeholder').textContent = username;
+
+  fetch(`/saldo?username=${encodeURIComponent(username)}`)
+      .then(response => response.json())
+      .then(data => {
+          document.getElementById('saldo-placeholder').textContent = data.saldo;
+      })
+      .catch(error => console.error('Error:', error));
+
+  document.getElementById('transfer-button')?.addEventListener('click', function() {
+      window.location.href = `/transfer?username=${encodeURIComponent(username)}`;
+  });
+
+  document.getElementById('crear-apartado-form')?.addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const nombre = document.getElementById('nombre-apartado').value;
+      const monto = document.getElementById('monto-apartado').value;
+
+      fetch('/crear-apartado', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ nombre, monto, username })
+      })
+      .then(response => response.text())
+      .then(data => {
+          alert(data);
+          window.location.href = `/home?username=${encodeURIComponent(username)}`;
+      })
+      .catch(error => console.error('Error:', error));
+  });
+});

@@ -1,5 +1,3 @@
-// server.js
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
@@ -20,6 +18,8 @@ let db = new sqlite3.Database(path.join(__dirname, 'database.db'), (err) => {
     }
 });
 
+
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
@@ -35,6 +35,10 @@ app.get('/register', (req, res) => {
 app.get('/home', (req, res) => {
     const { username } = req.query;
     res.sendFile(path.join(__dirname, '..', 'public', 'home.html'));
+});
+
+app.get('/transfer', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'transfer.html'));
 });
 
 app.post('/register', (req, res) => {
@@ -87,12 +91,10 @@ app.post('/transfer', (req, res) => {
     const { username, destUsername, amount } = req.body;
     const amountFloat = parseFloat(amount);
 
-    // Validar que el remitente y el destinatario sean diferentes
     if (username === destUsername) {
         return res.status(400).json({ success: false, message: "No puedes transferirte dinero a ti mismo." });
     }
 
-    // Validar que el monto sea un número válido y mayor que cero
     if (isNaN(amountFloat) || amountFloat <= 0) {
         return res.status(400).json({ success: false, message: "El monto de la transferencia debe ser un número positivo." });
     }
@@ -135,7 +137,6 @@ app.post('/transfer', (req, res) => {
                             return res.status(500).json({ success: false, message: "Error al actualizar el saldo del destinatario." });
                         }
 
-                        // Registro de la transferencia en la tabla 'transferencias'
                         const insertTransferQuery = `INSERT INTO transferencias (remitente_id, destinatario_id, monto, fecha) VALUES (?, ?, ?, DATE('now'))`;
                         db.run(insertTransferQuery, [username, destUsername, amountFloat], function(err) {
                             if (err) {
@@ -165,6 +166,25 @@ app.post('/transfer', (req, res) => {
                 });
             });
         });
+    });
+});
+
+app.post('/crear-apartado', (req, res) => {
+    const { nombre, monto, username } = req.body;
+    const montoFloat = parseFloat(monto);
+
+    const insertApartadoQuery = `
+        INSERT INTO apartados (nombre, monto, fecha_creacion, usuario_id)
+        VALUES (?, ?, DATE('now'), (SELECT id FROM usuarios WHERE nombre_usuario = ?))
+    `;
+
+    db.run(insertApartadoQuery, [nombre, montoFloat, username], function(err) {
+        if (err) {
+            console.error(err.message);
+            res.status(500).send("Error al crear el apartado.");
+        } else {
+            res.send("¡Apartado creado correctamente!");
+        }
     });
 });
 
