@@ -99,6 +99,10 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('transfer-button')?.addEventListener('click', function() {
       window.location.href = `/transfer.html?username=${encodeURIComponent(username)}`;
   });
+
+  document.getElementById('apartados-button')?.addEventListener('click', function() {
+        window.open(`/apartados.html?username=${encodeURIComponent(username)}`, '_blank');
+    });
 });
 
 document.getElementById('transfer-form')?.addEventListener('submit', function(event) {
@@ -151,25 +155,30 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('transfer-button')?.addEventListener('click', function() {
       window.location.href = `/transfer?username=${encodeURIComponent(username)}`;
   });
+});
 
-  document.getElementById('crear-apartado-form')?.addEventListener('submit', function(event) {
-      event.preventDefault();
+document.getElementById('crear-apartado-form')?.addEventListener('submit', function(event) {
+  event.preventDefault();
 
-      const nombre = document.getElementById('nombre-apartado').value;
-      const monto = document.getElementById('monto-apartado').value;
+  const username = new URLSearchParams(window.location.search).get('username');
+  const nombreApartado = document.getElementById('nombre-apartado').value;
+  const montoApartado = document.getElementById('monto-apartado').value;
 
-      fetch('/crear-apartado', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ nombre, monto, username })
-      })
-      .then(response => response.text())
-      .then(data => {
-          alert(data);
-          window.location.href = `/home?username=${encodeURIComponent(username)}`;
-      })
-      .catch(error => console.error('Error:', error));
-  });
+  fetch('/crear-apartado', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ nombreApartado, montoApartado, username})
+  })
+  .then(response => response.text())
+  .then(data => {
+    if (data.success) {
+      alert("¡Apartado exitoso!");
+      window.location.href = `/home?username=${encodeURIComponent(username)}`;
+    } else {
+      alert("Se creo el Apartado.");
+    }
+  })
+  .catch(error => console.error('Error:', error));
 });

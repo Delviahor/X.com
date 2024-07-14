@@ -171,15 +171,15 @@ app.post('/transfer', (req, res) => {
 });
 
 app.post('/crear-apartado', (req, res) => {
-    const { nombre, monto, username } = req.body;
-    const montoFloat = parseFloat(monto);
+    const {nombreApartado, montoApartado, username} = req.body;
+    const montoFloat = parseFloat(montoApartado);
 
     const insertApartadoQuery = `
         INSERT INTO apartados (nombre, monto, fecha_creacion, usuario_id)
         VALUES (?, ?, DATE('now'), (SELECT id FROM usuarios WHERE nombre_usuario = ?))
     `;
 
-    db.run(insertApartadoQuery, [nombre, montoFloat, username], function(err) {
+    db.run(insertApartadoQuery, [nombreApartado, montoFloat, username], function(err) {
         if (err) {
             console.error(err.message);
             res.status(500).send("Error al crear el apartado.");
