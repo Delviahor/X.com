@@ -169,15 +169,15 @@ document.getElementById('crear-apartado-form')?.addEventListener('submit', funct
       headers: {
           'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ nombreApartado, montoApartado, username})
+      body: JSON.stringify({ nombreApartado, montoApartado, username })
   })
-  .then(response => response.text())
+  .then(response => response.json())
   .then(data => {
     if (data.success) {
-      alert("¡Apartado exitoso!");
+      alert(data.message);
       window.location.href = `/home?username=${encodeURIComponent(username)}`;
     } else {
-      alert("Se creo el Apartado.");
+      alert(`Error: ${data.message}`);
     }
   })
   .catch(error => console.error('Error:', error));

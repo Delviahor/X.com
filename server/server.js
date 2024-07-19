@@ -174,18 +174,67 @@ app.post('/crear-apartado', (req, res) => {
     const {nombreApartado, montoApartado, username} = req.body;
     const montoFloat = parseFloat(montoApartado);
 
-    const insertApartadoQuery = `
-        INSERT INTO apartados (nombre, monto, fecha_creacion, usuario_id)
-        VALUES (?, ?, DATE('now'), (SELECT id FROM usuarios WHERE nombre_usuario = ?))
-    `;
+    if (isNaN(montoFloat) || montoFloat <= 0) {
+        return res.status(400).json({ success: false, message: "El monto del apartado debe ser un número positivo mayor que cero." });
+    }
 
-    db.run(insertApartadoQuery, [nombreApartado, montoFloat, username], function(err) {
-        if (err) {
-            console.error(err.message);
-            res.status(500).send("Error al crear el apartado.");
-        } else {
-            res.send("¡Apartado creado correctamente!");
-        }
+    db.serialize(() => {
+        db.run("BEGIN TRANSACTION");
+
+        const obtenerSaldoQuery = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
+        db.get(obtenerSaldoQuery, [username], (err, usuario) => {
+            if (err) {
+                console.error("Error al obtener el saldo del usuario:", err.message);
+                db.run("ROLLBACK");
+                return res.status(500).json({ success: false, message: "Error al obtener el saldo del usuario." });
+            }
+            
+            if (!usuario) {
+                console.error("Usuario no encontrado");
+                db.run("ROLLBACK");
+                return res.status(404).json({ success: false, message: "Usuario no encontrado." });
+            }
+
+            if (usuario.saldo < montoFloat) {
+                console.error("Saldo insuficiente para crear el apartado.");
+                db.run("ROLLBACK");
+                return res.status(400).json({ success: false, message: "Saldo insuficiente para crear el apartado." });
+            }
+
+            const insertApartadoQuery = `
+                INSERT INTO apartados (nombre, monto, fecha_creacion, usuario_id)
+                VALUES (?, ?, DATE('now'), (SELECT id FROM usuarios WHERE nombre_usuario = ?))
+            `;
+            db.run(insertApartadoQuery, [nombreApartado, montoFloat, username], function(err) {
+                if (err) {
+                    console.error("Error al crear el apartado:", err.message);
+                    db.run("ROLLBACK");
+                    return res.status(500).json({ success: false, message: "Error al crear el apartado." });
+                }
+
+                const actualizarSaldoQuery = `
+                    UPDATE usuarios
+                    SET saldo = saldo - ?
+                    WHERE nombre_usuario = ?
+                `;
+                db.run(actualizarSaldoQuery, [montoFloat, username], function(err) {
+                    if (err) {
+                        console.error("Error al actualizar el saldo del usuario:", err.message);
+                        db.run("ROLLBACK");
+                        return res.status(500).json({ success: false, message: "Error al actualizar el saldo del usuario." });
+                    }
+
+                    db.run("COMMIT", (err) => {
+                        if (err) {
+                            console.error("Error al finalizar la transacción:", err.message);
+                            return res.status(500).json({ success: false, message: "Error al finalizar la transacción." });
+                        }
+
+                        res.json({ success: true, message: "¡Apartado creado correctamente!" });
+                    });
+                });
+            });
+        });
     });
 });
 
