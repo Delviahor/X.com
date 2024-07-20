@@ -238,6 +238,25 @@ app.post('/crear-apartado', (req, res) => {
     });
 });
 
+app.get('/obtener-apartados', (req, res) => {
+    const username = req.query.username;
+
+    const selectApartadosQuery = `
+        SELECT nombre, monto, fecha_creacion
+        FROM apartados
+        WHERE usuario_id = (SELECT id FROM usuarios WHERE nombre_usuario = ?)
+    `;
+
+    db.all(selectApartadosQuery, [username], (err, rows) => {
+        if (err) {
+            console.error(err.message);
+            return res.status(500).json({ success: false, message: "Error al obtener los apartados." });
+        }
+        res.json({ success: true, apartados: rows });
+    });
+});
+
+
 app.listen(port, () => {
     console.log(`Servidor iniciado en http://localhost:${port}`);
 });

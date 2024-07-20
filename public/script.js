@@ -174,11 +174,28 @@ document.getElementById('crear-apartado-form')?.addEventListener('submit', funct
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      alert(data.message);
-      window.location.href = `/home?username=${encodeURIComponent(username)}`;
+        alert(data.message);
+        // Actualizar la tabla de apartados
+        const apartadosList = document.getElementById('apartados-list');
+        const noApartadosMessage = apartadosList.querySelector('td[colspan="3"]');
+
+        if (noApartadosMessage) {
+            noApartadosMessage.remove();
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${nombreApartado}</td>
+            <td>${montoApartado}</td>
+            <td>${new Date().toISOString().split('T')[0]}</td>
+        `;
+        apartadosList.appendChild(row);
     } else {
-      alert(`Error: ${data.message}`);
+        alert(data.message);
     }
-  })
-  .catch(error => console.error('Error:', error));
+})
+.catch(error => {
+    console.error('Error:', error);
+    alert("Error al crear apartado.");
+});
 });
