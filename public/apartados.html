@@ -25,6 +25,7 @@
                 <th>Nombre</th>
                 <th>Monto</th>
                 <th>Fecha de creación</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody id="apartados-list">
@@ -37,35 +38,95 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const username = new URLSearchParams(window.location.search).get('username');
-
+    
             fetch(`/obtener-apartados?username=${encodeURIComponent(username)}`)
                 .then(response => response.json())
                 .then(data => {
                     const apartadosList = document.getElementById('apartados-list');
                     if (data.apartados.length === 0) {
                         const noDataRow = document.createElement('tr');
-                        noDataRow.innerHTML = `<td colspan="3">No hay apartados.</td>`;
+                        noDataRow.innerHTML = `<td colspan="4">No hay apartados.</td>`;
                         apartadosList.appendChild(noDataRow);
                     } else {
                         data.apartados.forEach(apartado => {
                             const row = document.createElement('tr');
+                            row.dataset.id = apartado.id; // Añadir ID a la fila
                             row.innerHTML = `
                                 <td>${apartado.nombre}</td>
                                 <td>${apartado.monto}</td>
                                 <td>${apartado.fecha_creacion}</td>
+                                <td>
+                                    <button class="edit-btn">Editar</button>
+                                    <button class="delete-btn">Eliminar</button>
+                                </td>
                             `;
                             apartadosList.appendChild(row);
+                        });
+    
+                        // Añadir eventos para los botones de editar y eliminar
+                        document.querySelectorAll('.edit-btn').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const row = this.closest('tr');
+                                const id = row.dataset.id;
+                                const nuevoMonto = prompt('Ingrese el nuevo monto:');
+                                if (nuevoMonto !== null) {
+                                    fetch(`/editar-apartado`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ id, nuevoMonto, username })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            row.children[1].textContent = nuevoMonto;
+                                            alert('Apartado actualizado correctamente.');
+                                        } else {
+                                            alert(data.message);
+                                        }
+                                    })
+                                    .catch(error => console.error('Error:', error));
+                                }
+                            });
+                        });
+    
+                        document.querySelectorAll('.delete-btn').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const row = this.closest('tr');
+                                const id = row.dataset.id;
+                                if (confirm('¿Estás seguro de que quieres eliminar este apartado?')) {
+                                    fetch(`/eliminar-apartado`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ id, username })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            row.remove();
+                                            alert('Apartado eliminado correctamente.');
+                                        } else {
+                                            alert(data.message);
+                                        }
+                                    })
+                                    .catch(error => console.error('Error:', error));
+                                }
+                            });
                         });
                     }
                 })
                 .catch(error => console.error('Error:', error));
         });
-
+    
         document.getElementById('back-button').addEventListener('click', function() {
             const username = new URLSearchParams(window.location.search).get('username');
             window.location.href = `/home?username=${encodeURIComponent(username)}`;
         });
     </script>
+    
     <script src="script.js"></script>
 </body>
 </html>
