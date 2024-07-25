@@ -403,35 +403,26 @@ app.post('/eliminar-apartado', (req, res) => {
 app.get('/historial', (req, res) => {
     const username = req.query.username;
 
-    const getUsuarioIdQuery = 'SELECT id FROM usuarios WHERE nombre_usuario = ?';
-    db.get(getUsuarioIdQuery, [username], (err, row) => {
-        if (err || !row) {
-            console.error(err ? err.message : "Usuario no encontrado.");
-            return res.status(500).json({ success: false, message: "Error al encontrar el usuario." });
+    // Consulta para obtener el historial de transferencias usando el nombre de usuario
+    const getHistorialQuery = `
+        SELECT t.fecha, t.remitente_id, t.destinatario_id, t.monto
+        FROM transferencias t
+        WHERE t.remitente_id = ? OR t.destinatario_id = ?
+        ORDER BY t.fecha DESC
+    `;
+
+    // Ejecutar la consulta con el nombre de usuario en lugar de IDs
+    db.all(getHistorialQuery, [username, username], (err, rows) => {
+        if (err) {
+            console.error(err.message);
+            return res.status(500).json({ success: false, message: "Error al obtener el historial de transferencias." });
         }
 
-        const usuarioId = row.id;
-
-        const getHistorialQuery = `
-            SELECT t.fecha, t.remitente_id, t.destinatario_id, t.monto, t.id,
-                   remitente.nombre_usuario AS remitente,
-                   destinatario.nombre_usuario AS destinatario
-            FROM transferencias t
-            JOIN usuarios remitente ON t.remitente_id = remitente.id
-            JOIN usuarios destinatario ON t.destinatario_id = destinatario.id
-            WHERE t.remitente_id = ? OR t.destinatario_id = ?
-            ORDER BY t.fecha DESC
-        `;
-        db.all(getHistorialQuery, [usuarioId, usuarioId], (err, rows) => {
-            if (err) {
-                console.error(err.message);
-                return res.status(500).json({ success: false, message: "Error al obtener el historial de transferencias." });
-            }
-
-            res.json({ success: true, data: rows });
-        });
+        // Responder con los datos obtenidos
+        res.json({ success: true, data: rows });
     });
 });
+
 
 
 app.listen(port, () => {
