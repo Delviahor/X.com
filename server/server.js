@@ -283,10 +283,8 @@ const multer = require('multer');
 const upload = multer();
 
 app.post('/editar-apartado', upload.none(), (req, res) => {
-  const { ApartadoId, nombreApartado, fechaCreacion, nuevoMonto, username } = req.body;
-  const montoFloat = parseFloat(nuevoMonto);
-
-  // ... (resto del código sigue igual)
+    const { ApartadoId, nombreApartado, fechaCreacion, nuevoMonto, username } = req.body;
+    const montoFloat = parseFloat(nuevoMonto);
   
     if (isNaN(montoFloat) || montoFloat <= 0) {
       return res.status(400).json({ success: false, message: "El monto debe ser un número positivo mayor que cero." });
@@ -298,33 +296,53 @@ app.post('/editar-apartado', upload.none(), (req, res) => {
         console.error(err ? err.message : "Usuario no encontrado.");
         return res.status(500).json({ success: false, message: "Error al encontrar el usuario." });
       }
-      //const apartadoId = req.params.id;
       const usuarioId = row.id;
-      const getApartadoQuery = 'SELECT * FROM apartados WHERE id = ? AND usuario_id = ?';
-      console.log(`Buscando apartado con ID ${ApartadoId} y usuario_id ${usuarioId}, de concepto ${nombreApartado} y fecha ${fechaCreacion}`);
-      db.get(getApartadoQuery, [ApartadoId, usuarioId], (err, row) => {
+  
+      // Obtener el monto antiguo del apartado
+      const getApartadoQuery = 'SELECT monto FROM apartados WHERE nombre = ? AND usuario_id = ?';
+      db.get(getApartadoQuery, [nombreApartado, usuarioId], (err, row) => {
         if (err || !row) {
           console.error(err ? err.message : "Apartado no encontrado.");
-          //return res.status(404).json({ success: false, message: "Apartado no encontrado." });
+          return res.status(404).json({ success: false, message: "Apartado no encontrado." });
         }
   
+        const montoAntiguo = row.monto;
+        const diferencia = montoFloat - montoAntiguo;
+  
+        // Actualizar el apartado
         const updateApartadoQuery = `
           UPDATE apartados
-          SET nombre = ?, monto = ?
-          WHERE fecha_creacion = ?
+          SET fecha_creacion = ?, monto = ?
+          WHERE nombre = ?
           AND usuario_id = ?
         `;
-        db.run(updateApartadoQuery, [nombreApartado, montoFloat, fechaCreacion, usuarioId], function(err) {
+        db.run(updateApartadoQuery, [fechaCreacion, montoFloat, nombreApartado, usuarioId], function(err) {
           if (err) {
             console.error(err.message);
             return res.status(500).json({ success: false, message: "Error al actualizar el apartado." });
           }
   
-          res.json({ success: true, message: "¡Apartado actualizado correctamente!" });
+          // Actualizar el saldo del usuario en función de la diferencia
+          let saldoActualizacionQuery;
+          if (diferencia > 0) {
+            saldoActualizacionQuery = `UPDATE usuarios SET saldo = saldo - ? WHERE id = ?`;
+          } else {
+            saldoActualizacionQuery = `UPDATE usuarios SET saldo = saldo + ? WHERE id = ?`;
+          }
+  
+          db.run(saldoActualizacionQuery, [Math.abs(diferencia), usuarioId], function(err) {
+            if (err) {
+              console.error("Error al actualizar el saldo del usuario:", err.message);
+              return res.status(500).json({ success: false, message: "Error al actualizar el saldo del usuario." });
+            }
+  
+            res.json({ success: true, message: "¡Apartado actualizado correctamente!" });
+          });
         });
       });
     });
   });
+  
 
 // Ruta para eliminar un apartado
 app.post('/eliminar-apartado', (req, res) => {
