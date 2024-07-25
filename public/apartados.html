@@ -22,6 +22,7 @@
     <table id="apartados-table" border="1">
         <thead>
             <tr>
+                <th>ID</th>
                 <th>Nombre</th>
                 <th>Monto</th>
                 <th>Fecha de creación</th>
@@ -45,13 +46,14 @@
                     const apartadosList = document.getElementById('apartados-list');
                     if (data.apartados.length === 0) {
                         const noDataRow = document.createElement('tr');
-                        noDataRow.innerHTML = `<td colspan="4">No hay apartados.</td>`;
+                        noDataRow.innerHTML = `<td colspan="5">No hay apartados.</td>`;
                         apartadosList.appendChild(noDataRow);
                     } else {
                         data.apartados.forEach(apartado => {
                             const row = document.createElement('tr');
-                            row.dataset.id = apartado.id; // Añadir ID a la fila
+                            
                             row.innerHTML = `
+                                <td>${apartado.id}</td>
                                 <td>${apartado.nombre}</td>
                                 <td>${apartado.monto}</td>
                                 <td>${apartado.fecha_creacion}</td>
@@ -67,34 +69,42 @@
                         document.querySelectorAll('.edit-btn').forEach(button => {
                             button.addEventListener('click', function() {
                                 const row = this.closest('tr');
-                                const id = row.dataset.id;
+                                const ApartadoId = row.children[0].textContent;
+                                const nombreApartado = row.children[1].textContent;
+                                const fechaCreacion = row.children[3].textContent;
                                 const nuevoMonto = prompt('Ingrese el nuevo monto:');
-                                if (nuevoMonto !== null) {
-                                    fetch(`/editar-apartado`, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                        },
-                                        body: JSON.stringify({ id, nuevoMonto, username })
-                                    })
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data.success) {
-                                            row.children[1].textContent = nuevoMonto;
-                                            alert('Apartado actualizado correctamente.');
-                                        } else {
-                                            alert(data.message);
-                                        }
-                                    })
-                                    .catch(error => console.error('Error:', error));
+                                if (nuevoMonto !== null && nuevoMonto !== '' && /^\d+(\.\d+)?$/.test(nuevoMonto)) {
+                                const formData = new FormData();
+                                formData.append('ApartadoId', ApartadoId);
+                                formData.append('nombreApartado', nombreApartado);
+                                formData.append('fechaCreacion', fechaCreacion);
+                                formData.append('nuevoMonto', nuevoMonto);
+                                formData.append('username', username);
+
+                                fetch(`/editar-apartado`, {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                    row.children[2].textContent = nuevoMonto;
+                                    alert('Apartado actualizado correctamente.');
+                                    window.location.href = `/home?username=${encodeURIComponent(username)}`;
+                                    } else {
+                                    alert(data.message);
+                                    }
+                                })
+                                .catch(error => console.error('Error:', error));
+                                } else {
+                                alert('Debe ingresar un valor numérico para el nuevo monto.');
                                 }
                             });
-                        });
-    
+                            });
                         document.querySelectorAll('.delete-btn').forEach(button => {
                             button.addEventListener('click', function() {
                                 const row = this.closest('tr');
-                                const id = row.dataset.id;
+                                const id = row.children[0].textContent;  // Obtener el ID directamente de la celda
                                 if (confirm('¿Estás seguro de que quieres eliminar este apartado?')) {
                                     fetch(`/eliminar-apartado`, {
                                         method: 'POST',

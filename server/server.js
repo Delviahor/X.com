@@ -179,9 +179,9 @@ app.post('/crear-apartado', (req, res) => {
     }
 
     db.serialize(() => {
-        db.run("BEGIN TRANSACTION");
+        // db.run("BEGIN TRANSACTION");
 
-        const obtenerSaldoQuery = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
+        const obtenerSaldoQuery = `SELECT saldo, id FROM usuarios WHERE nombre_usuario = ?`;
         db.get(obtenerSaldoQuery, [username], (err, usuario) => {
             if (err) {
                 console.error("Error al obtener el saldo del usuario:", err.message);
@@ -201,42 +201,63 @@ app.post('/crear-apartado', (req, res) => {
                 return res.status(400).json({ success: false, message: "Saldo insuficiente para crear el apartado." });
             }
 
-            const insertApartadoQuery = `
-                INSERT INTO apartados (nombre, monto, fecha_creacion, usuario_id)
-                VALUES (?, ?, DATE('now'), (SELECT id FROM usuarios WHERE nombre_usuario = ?))
-            `;
-            db.run(insertApartadoQuery, [nombreApartado, montoFloat, username], function(err) {
+            const userId = usuario.id;
+            const checkApartadoQuery = `SELECT * FROM apartados WHERE usuario_id = ? AND nombre = ?`;
+            db.get(checkApartadoQuery, [userId, nombreApartado], (err, row) => {
                 if (err) {
-                    console.error("Error al crear el apartado:", err.message);
-                    db.run("ROLLBACK");
-                    return res.status(500).json({ success: false, message: "Error al crear el apartado." });
+                    console.error(err.message);
+                    return res.status(500).json({ success: false, message: 'Error al verificar el nombre del apartado.' });
+                }
+                if (row) {
+                    return res.status(400).json({ success: false, message: 'El nombre del apartado ya existe.' });
                 }
 
-                const actualizarSaldoQuery = `
-                    UPDATE usuarios
-                    SET saldo = saldo - ?
-                    WHERE nombre_usuario = ?
-                `;
-                db.run(actualizarSaldoQuery, [montoFloat, username], function(err) {
+                db.run("BEGIN TRANSACTION", (err) => {
                     if (err) {
-                        console.error("Error al actualizar el saldo del usuario:", err.message);
-                        db.run("ROLLBACK");
-                        return res.status(500).json({ success: false, message: "Error al actualizar el saldo del usuario." });
+                        console.error("Error al iniciar la transacción:", err.message);
+                        return res.status(500).json({ success: false, message: "Error al iniciar la transacción." });
                     }
 
-                    db.run("COMMIT", (err) => {
+                    const insertApartadoQuery = `
+                        INSERT INTO apartados (nombre, monto, fecha_creacion, usuario_id)
+                        VALUES (?, ?, DATE('now'), ?)
+                    `;
+                    db.run(insertApartadoQuery, [nombreApartado, montoFloat, userId], function(err) {
                         if (err) {
-                            console.error("Error al finalizar la transacción:", err.message);
-                            return res.status(500).json({ success: false, message: "Error al finalizar la transacción." });
+                            console.error("Error al crear el apartado:", err.message);
+                            db.run("ROLLBACK");
+                            return res.status(500).json({ success: false, message: "Error al crear el apartado." });
                         }
 
-                        res.json({ success: true, message: "¡Apartado creado correctamente!" });
+                        const actualizarSaldoQuery = `
+                            UPDATE usuarios
+                            SET saldo = saldo - ?
+                            WHERE nombre_usuario = ?
+                        `;
+                        db.run(actualizarSaldoQuery, [montoFloat, username], function(err) {
+                            if (err) {
+                                console.error("Error al actualizar el saldo del usuario:", err.message);
+                                db.run("ROLLBACK");
+                                return res.status(500).json({ success: false, message: "Error al actualizar el saldo del usuario." });
+                            }
+
+                            db.run("COMMIT", (err) => {
+                                if (err) {
+                                    console.error("Error al finalizar la transacción:", err.message);
+                                    return res.status(500).json({ success: false, message: "Error al finalizar la transacción." });
+                                }
+
+                                res.json({ success: true, message: "¡Apartado creado correctamente!" });
+                            });
+                        });
                     });
                 });
             });
         });
-    });
-});
+    });  // Aquí cierra db.serialize
+});  // Y aquí cierra app.post
+
+
 
 app.get('/obtener-apartados', (req, res) => {
     const username = req.query.username;
@@ -257,30 +278,53 @@ app.get('/obtener-apartados', (req, res) => {
 });
 
 // Ruta para editar un apartado
-app.post('/editar-apartado', (req, res) => {
-    const { id, nuevoMonto, username } = req.body;
-    const montoFloat = parseFloat(nuevoMonto);
+const multer = require('multer');
 
+const upload = multer();
+
+app.post('/editar-apartado', upload.none(), (req, res) => {
+  const { ApartadoId, nombreApartado, fechaCreacion, nuevoMonto, username } = req.body;
+  const montoFloat = parseFloat(nuevoMonto);
+
+  // ... (resto del código sigue igual)
+  
     if (isNaN(montoFloat) || montoFloat <= 0) {
-        return res.status(400).json({ success: false, message: "El monto debe ser un número positivo mayor que cero." });
+      return res.status(400).json({ success: false, message: "El monto debe ser un número positivo mayor que cero." });
     }
-
-    db.serialize(() => {
+  
+    const getUsuarioIdQuery = 'SELECT id FROM usuarios WHERE nombre_usuario = ?';
+    db.get(getUsuarioIdQuery, [username], (err, row) => {
+      if (err || !row) {
+        console.error(err ? err.message : "Usuario no encontrado.");
+        return res.status(500).json({ success: false, message: "Error al encontrar el usuario." });
+      }
+      //const apartadoId = req.params.id;
+      const usuarioId = row.id;
+      const getApartadoQuery = 'SELECT * FROM apartados WHERE id = ? AND usuario_id = ?';
+      console.log(`Buscando apartado con ID ${ApartadoId} y usuario_id ${usuarioId}, de concepto ${nombreApartado} y fecha ${fechaCreacion}`);
+      db.get(getApartadoQuery, [ApartadoId, usuarioId], (err, row) => {
+        if (err || !row) {
+          console.error(err ? err.message : "Apartado no encontrado.");
+          //return res.status(404).json({ success: false, message: "Apartado no encontrado." });
+        }
+  
         const updateApartadoQuery = `
-            UPDATE apartados
-            SET monto = ?
-            WHERE id = ? AND usuario_id = (SELECT id FROM usuarios WHERE nombre_usuario = ?)
+          UPDATE apartados
+          SET nombre = ?, monto = ?
+          WHERE fecha_creacion = ?
+          AND usuario_id = ?
         `;
-        db.run(updateApartadoQuery, [montoFloat, id, username], function(err) {
-            if (err) {
-                console.error(err.message);
-                return res.status(500).json({ success: false, message: "Error al actualizar el apartado." });
-            }
-
-            res.json({ success: true, message: "¡Apartado actualizado correctamente!" });
+        db.run(updateApartadoQuery, [nombreApartado, montoFloat, fechaCreacion, usuarioId], function(err) {
+          if (err) {
+            console.error(err.message);
+            return res.status(500).json({ success: false, message: "Error al actualizar el apartado." });
+          }
+  
+          res.json({ success: true, message: "¡Apartado actualizado correctamente!" });
         });
+      });
     });
-});
+  });
 
 // Ruta para eliminar un apartado
 app.post('/eliminar-apartado', (req, res) => {
