@@ -104,14 +104,14 @@
                         document.querySelectorAll('.delete-btn').forEach(button => {
                             button.addEventListener('click', function() {
                                 const row = this.closest('tr');
-                                const id = row.children[0].textContent;  // Obtener el ID directamente de la celda
+                                const nombreApartado = row.children[1].textContent;  // Obtener el nombre directamente de la celda
                                 if (confirm('¿Estás seguro de que quieres eliminar este apartado?')) {
                                     fetch(`/eliminar-apartado`, {
                                         method: 'POST',
                                         headers: {
                                             'Content-Type': 'application/json',
                                         },
-                                        body: JSON.stringify({ id, username })
+                                        body: JSON.stringify({ nombreApartado, username })
                                     })
                                     .then(response => response.json())
                                     .then(data => {

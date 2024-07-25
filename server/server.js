@@ -352,13 +352,14 @@ app.post('/editar-apartado', upload.none(), (req, res) => {
 
 // Ruta para eliminar un apartado
 app.post('/eliminar-apartado', (req, res) => {
-    const { id, username } = req.body;
+    const { nombreApartado, username } = req.body;
 
     db.serialize(() => {
         db.run("BEGIN TRANSACTION");
 
-        const getMontoQuery = `SELECT monto FROM apartados WHERE id = ?`;
-        db.get(getMontoQuery, [id], (err, row) => {
+        // Obtener el monto del apartado a eliminar
+        const getMontoQuery = `SELECT monto FROM apartados WHERE nombre = ? AND usuario_id = (SELECT id FROM usuarios WHERE nombre_usuario = ?)`;
+        db.get(getMontoQuery, [nombreApartado, username], (err, row) => {
             if (err || !row) {
                 console.error(err ? err.message : "Apartado no encontrado.");
                 db.run("ROLLBACK");
@@ -367,14 +368,16 @@ app.post('/eliminar-apartado', (req, res) => {
 
             const montoFloat = row.monto;
 
-            const deleteApartadoQuery = `DELETE FROM apartados WHERE id = ? AND usuario_id = (SELECT id FROM usuarios WHERE nombre_usuario = ?)`;
-            db.run(deleteApartadoQuery, [id, username], function(err) {
+            // Eliminar el apartado
+            const deleteApartadoQuery = `DELETE FROM apartados WHERE nombre = ? AND usuario_id = (SELECT id FROM usuarios WHERE nombre_usuario = ?)`;
+            db.run(deleteApartadoQuery, [nombreApartado, username], function(err) {
                 if (err) {
                     console.error(err.message);
                     db.run("ROLLBACK");
                     return res.status(500).json({ success: false, message: "Error al eliminar el apartado." });
                 }
 
+                // Actualizar el saldo del usuario
                 const updateSaldoQuery = `UPDATE usuarios SET saldo = saldo + ? WHERE nombre_usuario = ?`;
                 db.run(updateSaldoQuery, [montoFloat, username], function(err) {
                     if (err) {
