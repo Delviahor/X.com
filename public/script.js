@@ -204,3 +204,56 @@ document.getElementById('crear-apartado-form')?.addEventListener('submit', funct
     alert("Error al crear apartado.");
 });
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+  const username = new URLSearchParams(window.location.search).get('username');
+  
+  // Verifica que el usuario esté definido
+  if (!username) {
+      alert("Nombre de usuario no encontrado en la URL");
+      return;
+  }
+
+  // Función para cargar el historial de transferencias
+  function loadHistorial() {
+      fetch(`/historial?username=${encodeURIComponent(username)}`)
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  const historialTable = document.querySelector('#historial-table tbody');
+                  historialTable.innerHTML = ''; // Limpiar la tabla antes de llenarla
+
+                  if (data.data.length === 0) {
+                      const noDataRow = document.createElement('tr');
+                      noDataRow.innerHTML = `<td colspan="5">No hay transferencias.</td>`;
+                      historialTable.appendChild(noDataRow);
+                  } else {
+                      data.data.forEach(transaccion => {
+                          const row = document.createElement('tr');
+                          row.innerHTML = `
+                              <td>${transaccion.fecha}</td>
+                              <td>${transaccion.remitente}</td>
+                              <td>${transaccion.destinatario}</td>
+                              <td>${transaccion.monto}</td>
+                              <td>${transaccion.id}</td>
+                          `;
+                          historialTable.appendChild(row);
+                      });
+                  }
+              } else {
+                  alert("Error al cargar el historial de transferencias.");
+              }
+          })
+          .catch(error => console.error('Error:', error));
+  }
+
+  // Cargar el historial de transferencias al cargar la página
+  loadHistorial();
+
+  // Agregar evento al botón de volver
+  document.getElementById('back-button')?.addEventListener('click', function() {
+      window.location.href = `/home?username=${encodeURIComponent(username)}`;
+  });
+});
+
+
