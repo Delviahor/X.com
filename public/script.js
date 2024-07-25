@@ -102,7 +102,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('apartados-button')?.addEventListener('click', function() {
         window.open(`/apartados.html?username=${encodeURIComponent(username)}`, '_blank');
-    });
+  });
+
+  document.getElementById('historial-button')?.addEventListener('click', function() {
+    window.location.href = `/historial.html?username=${encodeURIComponent(username)}`;
+  });
+  
 });
 
 document.getElementById('transfer-form')?.addEventListener('submit', function(event) {
