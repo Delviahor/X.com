@@ -290,13 +290,14 @@ app.post('/editar-apartado', upload.none(), (req, res) => {
       return res.status(400).json({ success: false, message: "El monto debe ser un número positivo mayor que cero." });
     }
   
-    const getUsuarioIdQuery = 'SELECT id FROM usuarios WHERE nombre_usuario = ?';
+    const getUsuarioIdQuery = 'SELECT id, saldo FROM usuarios WHERE nombre_usuario = ?';
     db.get(getUsuarioIdQuery, [username], (err, row) => {
       if (err || !row) {
         console.error(err ? err.message : "Usuario no encontrado.");
         return res.status(500).json({ success: false, message: "Error al encontrar el usuario." });
       }
       const usuarioId = row.id;
+      const saldoUsuario = row.saldo;
   
       // Obtener el monto antiguo del apartado
       const getApartadoQuery = 'SELECT monto FROM apartados WHERE nombre = ? AND usuario_id = ?';
@@ -308,6 +309,11 @@ app.post('/editar-apartado', upload.none(), (req, res) => {
   
         const montoAntiguo = row.monto;
         const diferencia = montoFloat - montoAntiguo;
+  
+        // Verificar si el saldo es suficiente
+        if (diferencia > saldoUsuario) {
+          return res.status(400).json({ success: false, message: "Saldo insuficiente para aumentar el monto del apartado." });
+        }
   
         // Actualizar el apartado
         const updateApartadoQuery = `
