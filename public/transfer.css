@@ -1,0 +1,89 @@
+/* transfer.css */
+
+/* Estilo básico para el cuerpo de la página con imagen de fondo */
+body {
+    font-family: Arial, sans-serif;
+    background-image: url('imagenes/transfer\ \(3\).jpg'); /* Reemplaza con la ruta de tu imagen */
+    background-size: cover; /* Ajusta la imagen para cubrir todo el fondo */
+    background-position: center; /* Centra la imagen */
+    background-repeat: no-repeat; /* Evita que la imagen se repita */
+    color: #fff; /* Texto blanco */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+/* Estilo para el encabezado */
+h2 {
+    color: #fff; /* Texto blanco */
+}
+
+/* Estilo para el formulario */
+#transfer-form {
+    background-color: rgba(0, 0, 0, 0.8); /* Fondo negro semi-transparente */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); /* Sombra blanca suave */
+    max-width: 400px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Estilo para las etiquetas y los campos de entrada */
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #fff; /* Texto blanco */
+}
+
+input[type="text"],
+input[type="number"] {
+    width: calc(100% - 22px); /* Ajusta el ancho considerando el padding y border */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #555; /* Borde gris oscuro */
+    border-radius: 4px;
+    background-color: #333; /* Fondo de campo de entrada oscuro */
+    color: #fff; /* Texto blanco en el campo de entrada */
+    box-sizing: border-box;
+}
+
+/* Estilo para el botón de transferencia */
+button[type="submit"] {
+    background-color: #4CAF50; /* Verde */
+    color: #fff; /* Texto blanco */
+    border: none;
+    padding: 15px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin-top: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #45a049; /* Verde más oscuro */
+}
+
+/* Estilo para el botón de regreso */
+#back-button {
+    margin-top: 20px;
+    padding: 10px 15px;
+    background-color: #f44336; /* Rojo */
+    color: #fff; /* Texto blanco */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#back-button:hover {
+    background-color: #e53935; /* Rojo más oscuro */
+}

@@ -1,0 +1,29 @@
+1.- Diagrama fishbone
+2.- Diagrama Relacional de Datos
+3.- Diagrama de Gantt
+4.- Diagrama Entidad-Relacion
+5.- Manual de Usuario
+6.- Video de la aplicacion en funcionamiento.
+
+
+Samantha:
+1.- Diagrama de Gantt
+2.- El video
+3.- Diagrama Relacional de Datos
+4.- Diagrama FishBone
+
+Notas: 01
+
+A) El video aparentemente ya lo puedo hacer.
+B) El Diagrama de Gantt ya esta corregido, faltaria hacer el diagrama relacional de datos
+C) El diagrama FishBone ya lo tiene abdiel
+D) El manual de usuario ya esta avanzado
+E) El diagrama Entidad Relacion ya esta avanzado
+
+Notas 02:
+
+A) El video ya esta listo
+
+Abdiel:
+1.- Diagrama Entidad-Relacion
+2.- Manual de Usuario

@@ -1,0 +1,30 @@
+// Ruta para obtener el historial de transferencias
+app.get('/historial', (req, res) => {
+    const { username } = req.query;
+
+    if (!username) {
+        return res.status(400).json({ success: false, message: "Nombre de usuario no proporcionado." });
+    }
+
+    const getUsuarioIdQuery = 'SELECT id FROM usuarios WHERE nombre_usuario = ?';
+    db.get(getUsuarioIdQuery, [username], (err, row) => {
+        if (err || !row) {
+            console.error(err ? err.message : "Usuario no encontrado.");
+            return res.status(500).json({ success: false, message: "Error al encontrar el usuario." });
+        }
+
+        const usuarioId = row.id;
+
+        const getTransferenciasQuery = `
+            SELECT * FROM transferencias WHERE usuario_id = ?
+        `;
+        db.all(getTransferenciasQuery, [usuarioId], (err, rows) => {
+            if (err) {
+                console.error(err.message);
+                return res.status(500).json({ success: false, message: "Error al obtener las transferencias." });
+            }
+
+            res.json({ transferencias: rows });
+        });
+    });
+});

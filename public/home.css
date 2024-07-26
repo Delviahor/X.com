@@ -1,0 +1,44 @@
+/* styles.css */
+
+/* Estilos generales */
+body {
+    background-color: #121212;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-image: url('imagenes/cielo-estrellado-oscuridad_255502-338.avif'); /* Ruta de la imagen de fondo */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Estilos para los encabezados */
+h2, h3 {
+    text-align: center;
+}
+
+/* Estilos para los párrafos */
+p {
+    text-align: center;
+    font-size: 1.2em;
+}
+
+/* Estilos para los botones */
+button {
+    display: block;
+    width: 30%; /* Reducción del ancho del botón */
+    margin: 10px auto;
+    padding: 10px; /* Reducción del padding del botón */
+    background-color: #1e88e5;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9em; /* Reducción del tamaño de la fuente */
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #1565c0;
+}

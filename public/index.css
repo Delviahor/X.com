@@ -8,11 +8,18 @@ body {
   text-align: center;
   margin: 0;
   padding: 0;
+  background-image: url('imagenes/imagen4.jpg'); /* Cambia esto por la ruta de tu imagen */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 .container {
   max-width: 600px;
   margin: 100px auto;
+  background-color: rgba(0, 0, 0, 0); /* Fondo negro semi-transparente */
+  padding: 20px;
+  border-radius: 10px;
 }
 
 h1 {
@@ -59,22 +66,22 @@ h2, p, h3, form {
 }
 
 label, input, button {
-    color: white;
-    background-color: black;
-    border: 1px solid white;
-    margin: 5px 0;
-    padding: 5px;
+  color: white;
+  background-color: black;
+  border: 1px solid white;
+  margin: 5px 0;
+  padding: 5px;
 }
 
 input, button {
-    width: 100%;
+  width: 100%;
 }
 
 button {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 button:hover {
-    background-color: white;
-    color: black;
+  background-color: white;
+  color: black;
 }

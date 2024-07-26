@@ -1,0 +1,32 @@
+1.- Instalar Live Server ( en VS Code)
+2.- Instalar Node.js en su pagina oficial 
+
+1.- Dirigirse a la carpeta server del proyecto
+
+2.- Dentro de la carpeta server, inicializar proyecto node.js
+
+npm init -y
+
+3.- instalar dependencias con el comando
+
+npm install express body-parser sqlite3
+
+# En caso de que no funcione el comando, instalarlos independientemente:
+
+express: npm install express
+sqlite3: npm install sqlite3
+
+4.- Ejecutar el servidor en la ruta de la carpeta server
+
+node server.js
+
+Si el servidor falla:
+
+1.- Verificar la instalacion de Node.js escribiendo en la terminal: 
+node -v
+npm -v
+#Estos comandos deben mostrar las versiones de node y npm instaladas, en caso que no, reinstalar. 
+
+
+Nota: Cuando inicien el servidor y puedan interactuar con la aplicacion, en caso de que quieran cerrarla, en la terminal donde iniciaron
+	el servidor presionaran Ctrl + C

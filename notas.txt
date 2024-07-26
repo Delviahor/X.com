@@ -1,0 +1,32 @@
+En este punto el sistema tiene 3 ventanas, la de inicio (index.html), la de inicio de sesion (login) y la de registro (register)
+
+(A).-  Inicio/index.html   requiere de:
+
+-Mejoras en el aspecto visual
+
+(B).-  Inicio de sesion/login.html
+
+-Mejoras en el aspecto visual
++Reconocer las credenciales de inicio de sesion almacenadas en la base de datos
++Una vez validado exitosamente, te regresa al inicio, si no, te avisa que alguna credencial es incorrecta.
+
+(C).-  Registro/register.html
+
+-Mejoras en el aspecto visual
++ Ya no permite las mayusculas, solo minusculas, y emite una alerta para que el usuario las corriga.
++ Una vez regisrado exitosamente, te avisa y te regresa a la pagina de inicio.
+
+Despues de esto... que? o si, mostrar una ventana de usuario.
+
+Pero que mostaria esta ventana?
+1.- Mensaje de bienvenida, con el nombre del usuario  (Listo)
+2.- Saldo  (por defecto sera de $1000)  (Listo para mostrarlo, listo a nivel DataBase)
+
+Despues agregaremos mas funciones, como la creacion de separaciones
+1.- Creacion de apartados de dinero con fecha, hora y nombre del apartado.
+2.- Historial de movimientos, como la creacion de separaciones.
+
+En este momento se ha agregado la opcion de agregar transferencia, mostrada en home.html, ocurre que es mejor que esta
+opcion se muestre en la misma pagina pero abriendose en la misma desde un boton y no mostrandose directamente ahi.
+
+Es decir, como se muestra en el diagrama,

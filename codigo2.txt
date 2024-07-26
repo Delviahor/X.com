@@ -1,0 +1,62 @@
+app.post('/crear-apartado', (req, res) => {
+    const { nombreApartado, montoApartado, username } = req.body;
+    const montoFloat = parseFloat(montoApartado);
+
+    // Validar que el monto sea mayor que cero
+    if (isNaN(montoFloat) || montoFloat <= 0) {
+        return res.status(400).send("El monto del apartado debe ser un número positivo mayor que cero.");
+    }
+
+    db.serialize(() => {
+        db.run("BEGIN TRANSACTION");
+
+        // Obtener el saldo del usuario
+        const obtenerSaldoQuery = `SELECT saldo FROM usuarios WHERE nombre_usuario = ?`;
+        db.get(obtenerSaldoQuery, [username], (err, usuario) => {
+            if (err || !usuario) {
+                db.run("ROLLBACK");
+                return res.status(500).send("Error al obtener el saldo del usuario.");
+            }
+
+            if (usuario.saldo < montoFloat) {
+                db.run("ROLLBACK");
+                return res.status(400).send("Saldo insuficiente para crear el apartado.");
+            }
+
+            // Insertar el nuevo apartado
+            const insertApartadoQuery = `
+                INSERT INTO apartados (nombre, monto, fecha_creacion, usuario_id)
+                VALUES (?, ?, DATE('now'), (SELECT id FROM usuarios WHERE nombre_usuario = ?))
+            `;
+            db.run(insertApartadoQuery, [nombreApartado, montoFloat, username], function(err) {
+                if (err) {
+                    db.run("ROLLBACK");
+                    console.error(err.message);
+                    return res.status(500).send("Error al crear el apartado.");
+                }
+
+                // Actualizar el saldo del usuario
+                const actualizarSaldoQuery = `
+                    UPDATE usuarios
+                    SET saldo = saldo - ?
+                    WHERE nombre_usuario = ?
+                `;
+                db.run(actualizarSaldoQuery, [montoFloat, username], function(err) {
+                    if (err) {
+                        db.run("ROLLBACK");
+                        console.error(err.message);
+                        return res.status(500).send("Error al actualizar el saldo del usuario.");
+                    }
+
+                    db.run("COMMIT", (err) => {
+                        if (err) {
+                            return res.status(500).send("Error al finalizar la transacción.");
+                        }
+
+                        res.send("¡Apartado creado correctamente!");
+                    });
+                });
+            });
+        });
+    });
+});
